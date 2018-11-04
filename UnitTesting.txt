@@ -1,0 +1,59 @@
+Unit Testing
+- testing a part of an app in isolation from its infrastructure and dependencies
+
+Unit tests of controller actions to focust on the controller's behavior
+
+
+Arrange
+Act
+Assert
+
+Mocks dependencies
+- services to create controller
+- other dependencies
+
+Execute an action
+Makes assertions on the result returned by the method
+
+----->
+public HomeController(IBrainstormSessionRepository sessionRepository)
+    {
+        _sessionRepository = sessionRepository;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        var sessionList = await _sessionRepository.ListAsync();
+
+        var model = sessionList.Select(session => new StormSessionViewModel()
+        {
+            Id = session.Id,
+            DateCreated = session.DateCreated,
+            Name = session.Name,
+            IdeaCount = session.Ideas.Count
+        });
+
+        return View(model);
+    }
+----->
+public async Task Index_ReturnsAViewResult_WithAListOfBrainstormSessions()
+{
+    // Arrange
+    var mockRepo = new Mock<IBrainstormSessionRepository>();
+    mockRepo.Setup(repo => repo.ListAsync())
+        .ReturnsAsync(GetTestSessions());
+    var controller = new HomeController(mockRepo.Object);
+
+    // Act
+    var result = await controller.Index();
+
+    // Assert
+    var viewResult = Assert.IsType<ViewResult>(result);
+    var model = Assert.IsAssignableFrom<IEnumerable<StormSessionViewModel>>(
+        viewResult.ViewData.Model);
+    Assert.Equal(2, model.Count());
+}
+----->
+
+
+
